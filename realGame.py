@@ -28,19 +28,20 @@ def getPage(url):
     return soup
 
 
-def findPageSearch(url):
-    with urllib.request.urlopen(url) as response:
-        webpage = response.read()
-        soup = BeautifulSoup(webpage, 'html.parser')
-        title = soup.select('h1.firstHeading')[0].text.strip()
-        titreUrl = str(title).split(' ', 1)[0]
-        hrefs = soup.find_all('link')
-        for url in hrefs:
-            if str(url['href']).__contains__("https://fr.wikipedia.org/wiki/" + titreUrl):
-                return url['href']
+def formatageUrl(arg):
+    urlStep1 = arg.replace(" ", "_")
+    encodeUrl = urllib.parse.quote(urlStep1.encode('utf-8'))
+    finalURL = encodeUrl.replace("%3A", ":")
+    return finalURL
 
 
-def extractWebpage(soup, start, end):
+def findPageURLSearch(url):
+    notEncodepageUrl = 'https://fr.wikipedia.org/wiki/{}'.format(getPageTitle(getPage(url)))
+    encodePageUrl = formatageUrl(notEncodepageUrl)
+    return encodePageUrl
+
+
+def extractWebpage(soup, start, end, historique):
     # Nettoyage
     for annotNb in soup.find_all('sup', class_="reference"):
         annotNb.extract()
@@ -73,10 +74,9 @@ def extractWebpage(soup, start, end):
     for ebauche in soup.find_all('div', class_="bandeau-article"):
         ebauche.extract()
 
-
     # Affiche lien retour + liens et compte
     i = 1
-    if tour > 1:
+    if tour > 1 and len(historique) > 1:
         print("0 => retour")
     for anchor in soup.find('div', class_="mw-parser-output").find_all('a', href=True):
         if anchor.getText().strip() != '':
@@ -86,8 +86,10 @@ def extractWebpage(soup, start, end):
             else:
                 i += 1
             listLiens.append(Lien(i, anchor.getText(), anchor['href']))
-    print("98 => Page précédante")
-    print("99 => Page Suivant")
+    if start >= 20:
+        print("98 => Page précédante")
+    if end <= len(listLiens):
+        print("99 => Page Suivant")
     print("Total:", i - 1, "résultats")
 
 
@@ -102,30 +104,34 @@ def jeuTour(nb, toGoUrl):
     print("Départ :", getPageTitle(pageBase))
     print("Cible :", getPageTitle(pageArrivée))
     print("Actuel :", getPageTitle(currentPage))
-    extractWebpage(currentPage, paginationstart, paginationLimite)
+    extractWebpage(currentPage, paginationstart, paginationLimite, history)
     choix = input("votre choix :")
     try:
         if choix == "0" and nb > 0:
             history.pop()
-        if choix == "99":
+        elif choix == "99":
             paginationLimite += 20
             paginationstart += 20
             tour -= 1
-        if choix == "98":
+        elif choix == "98":
             paginationLimite -= 20
             paginationstart -= 20
             tour -= 1
-        if paginationstart <= int(choix) <= paginationLimite:
+        elif paginationstart <= int(choix) <= paginationLimite:
             choixSelectedIndex = int(choix) - 1
             history.append("https://fr.wikipedia.org" + str(listLiens[choixSelectedIndex].url))
             currentUrl = history[-1]
+            paginationLimite = 20
+            paginationstart = 1
+        else:
+            raise ValueError
         if toGoUrl == currentUrl:
             global fin
             fin = True
     except ValueError:
         tour -= 1
-        print("Erreur de Saisie!! Un nombre afficher sur l'ecran est attendu"); sleep(3)
-
+        print("Erreur de Saisie!! Un nombre afficher sur l'ecran est attendu")
+        sleep(3)
 
 
 # Main
@@ -134,8 +140,8 @@ fin = False
 paginationLimite = 20
 paginationstart = 1
 urlRandom = 'https://fr.wikipedia.org/wiki/Sp%C3%A9cial:Page_au_hasard'
-firstPageUrl = findPageSearch(urlRandom)
-toGoUrl = findPageSearch(urlRandom)
+firstPageUrl = findPageURLSearch(urlRandom)
+toGoUrl = findPageURLSearch(urlRandom)
 listLiens = []
 history = []
 
