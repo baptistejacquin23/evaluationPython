@@ -89,7 +89,7 @@ def extractWebpage(soup, start, end, historique):
     i = 1
     if tour > 1 and len(historique) > 1:
         questions[0].get("choices").append("0 => Retour à la page précédante")
-        questions[0].get("choices").append(Separator(), )
+        questions[0].get("choices").append(Separator(),)
     for anchor in soup.find('div', class_="mw-parser-output").find_all('a', href=True):
         if anchor.getText().strip() != '':
             if start <= i <= end:
@@ -110,7 +110,7 @@ def extractWebpage(soup, start, end, historique):
     return answers
 
 
-def jeuTour(nb, toGoUrl):
+def jeuTour(nb, finalUrl):
     currentUrl = history[-1]
     currentPage = getPage(currentUrl)
     global paginationLimite
@@ -127,6 +127,8 @@ def jeuTour(nb, toGoUrl):
     try:
         if choix == "0" and nb > 0:
             history.pop()
+            paginationLimite = 20
+            paginationstart = 1
         if "99 => Page Suivant" in choixFullString:
             paginationLimite += 20
             paginationstart += 20
@@ -135,13 +137,14 @@ def jeuTour(nb, toGoUrl):
             paginationLimite -= 20
             paginationstart -= 20
             tour -= 1
-        if paginationstart <= int(choix) <= paginationLimite and "99 => Page Suivant" not in choixFullString and "98 => Page précédante" not in choixFullString:
+        if paginationstart <= int(
+                choix) <= paginationLimite and "99 => Page Suivant" not in choixFullString and "98 => Page précédante" not in choixFullString:
             choixSelectedIndex = int(choix) - 1
             history.append("https://fr.wikipedia.org" + str(listLiens[choixSelectedIndex].url))
             currentUrl = history[-1]
             paginationLimite = 20
             paginationstart = 1
-        if toGoUrl == currentUrl:
+        if finalUrl == currentUrl:
             global fin
             fin = True
     except ValueError:
