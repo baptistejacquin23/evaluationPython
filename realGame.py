@@ -1,11 +1,13 @@
 # Python 3
 # Extraction des liens d'une page web
+from __future__ import print_function, unicode_literals
 from bs4 import BeautifulSoup
 import urllib.request
 import os
-import sys
-import copy
 from time import sleep
+import urllib
+from PyInquirer import prompt, Separator
+from examples import custom_style_2
 
 
 class Lien():
@@ -75,22 +77,37 @@ def extractWebpage(soup, start, end, historique):
         ebauche.extract()
 
     # Affiche lien retour + liens et compte
+    questions = [
+        {
+            'type': 'list',
+            'name': 'theme',
+            'message': 'Choisissez parmi les liens suivants : ',
+            'choices': [
+            ]
+        },
+    ]
     i = 1
     if tour > 1 and len(historique) > 1:
-        print("0 => retour")
+        questions[0].get("choices").append("0 => Retour à la page précédante")
+        questions[0].get("choices").append(Separator(), )
     for anchor in soup.find('div', class_="mw-parser-output").find_all('a', href=True):
         if anchor.getText().strip() != '':
             if start <= i <= end:
-                print(i, '=>', anchor.getText())
+                questions[0].get("choices").append(str(i) + ' => ' + str(anchor.getText()))
                 i += 1
             else:
                 i += 1
             listLiens.append(Lien(i, anchor.getText(), anchor['href']))
+
+    questions[0].get("choices").append(Separator(),)
     if start >= 20:
-        print("98 => Page précédante")
+        questions[0].get("choices").append("98 => Page précédante")
     if end <= len(listLiens):
-        print("99 => Page Suivant")
+        questions[0].get("choices").append("99 => Page Suivant")
     print("Total:", i - 1, "résultats")
+    answers = prompt(questions, style=custom_style_2)
+
+    return answers
 
 
 def jeuTour(nb, toGoUrl):
@@ -104,33 +121,32 @@ def jeuTour(nb, toGoUrl):
     print("Départ :", getPageTitle(pageBase))
     print("Cible :", getPageTitle(pageArrivée))
     print("Actuel :", getPageTitle(currentPage))
-    extractWebpage(currentPage, paginationstart, paginationLimite, history)
-    choix = input("votre choix :")
+    result = extractWebpage(currentPage, paginationstart, paginationLimite, history)
+    choix = result["theme"].split(' ', 1)[0]
+    choixFullString = result["theme"]
     try:
         if choix == "0" and nb > 0:
             history.pop()
-        elif choix == "99":
+        if "99 => Page Suivant" in choixFullString:
             paginationLimite += 20
             paginationstart += 20
             tour -= 1
-        elif choix == "98":
+        if "98 => Page précédante" in choixFullString:
             paginationLimite -= 20
             paginationstart -= 20
             tour -= 1
-        elif paginationstart <= int(choix) <= paginationLimite:
+        if paginationstart <= int(choix) <= paginationLimite and "99 => Page Suivant" not in choixFullString and "98 => Page précédante" not in choixFullString:
             choixSelectedIndex = int(choix) - 1
             history.append("https://fr.wikipedia.org" + str(listLiens[choixSelectedIndex].url))
             currentUrl = history[-1]
             paginationLimite = 20
             paginationstart = 1
-        else:
-            raise ValueError
         if toGoUrl == currentUrl:
             global fin
             fin = True
     except ValueError:
         tour -= 1
-        print("Erreur de Saisie!! Un nombre afficher sur l'ecran est attendu")
+        print("Erreur de Saisie!! Un nombre afficher sur l'ecran est attendu");
         sleep(3)
 
 
@@ -150,7 +166,7 @@ pageArrivée = getPage(toGoUrl)
 
 history.append(firstPageUrl)
 
-while fin == False:
+while not fin == True:
     os.system('cls||clear')
     jeuTour(tour, toGoUrl)
     listLiens.clear()
