@@ -4,13 +4,14 @@ from __future__ import print_function, unicode_literals
 from bs4 import BeautifulSoup
 import urllib.request
 import os
+import sys
 from time import sleep
 import urllib
 from PyInquirer import prompt, Separator
 from examples import custom_style_2
 
 
-class Lien():
+class Lien:
     def __init__(self, index, nom, url):
         self.index = index
         self.nom = nom
@@ -42,17 +43,23 @@ def findPageURLSearch(url):
     return encodePageUrl
 
 
+def seedUrl(url):
+    notEncodepageUrl = getPageTitle(getPage(url))
+    encodePageUrl = notEncodepageUrl.replace(" ", "_")
+    return encodePageUrl
+
+
 def extractWebpage(soup, start, end, historique):
     # Nettoyage
     for annotNb in soup.find_all('sup', class_="reference"):
         annotNb.extract()
     for annotModif in soup.find_all('span', class_="mw-editsection"):
         annotModif.extract()
-    for cadre in soup.find_all('table', class_="infobox"):
+    for cadre in soup.find_all('div', class_="infobox"):
         cadre.extract()
-    for cadre in soup.find_all('table', class_="infobox_v2"):
+    for cadre in soup.find_all('div', class_="infobox_v2"):
         cadre.extract()
-    for cadre in soup.find_all('table', class_="infobox_v3"):
+    for cadre in soup.find_all('div', class_="infobox_v3"):
         cadre.extract()
     for portail in soup.find_all('ul', class_="bandeau-portail"):
         portail.extract()
@@ -117,8 +124,8 @@ def jeuTour(nb, finalUrl):
     global tour
     print("🌊🌊🌊🌊🌊 Wikigame 🌊🌊🌊🌊🌊", "Tour :", nb)
     print("🏁 Départ :", getPageTitle(pageBase) + " 🏁")
-    print("🎯 Cible :", getPageTitle(pageArrivée)+ " 🎯")
-    print("🚩 Actuel :", getPageTitle(currentPage)+ " 🚩")
+    print("🎯 Cible :", getPageTitle(pageArrivée) + " 🎯")
+    print("🚩 Actuel :", getPageTitle(currentPage) + " 🚩")
     result = extractWebpage(currentPage, paginationstart, paginationLimite, history)
     choix = result["theme"].split(' ', 1)[0]
     choixFullString = result["theme"]
@@ -140,7 +147,8 @@ def jeuTour(nb, finalUrl):
                 choix) <= paginationLimite and "99 => Page Suivant" not in choixFullString and "98 => Page précédante" not in choixFullString:
             choixSelectedIndex = int(choix) - 1
             history.append("https://fr.wikipedia.org" + str(listLiens[choixSelectedIndex].url))
-            historyToDisplay.append(getPageTitle(getPage("https://fr.wikipedia.org" + str(listLiens[choixSelectedIndex].url))))
+            historyToDisplay.append(
+                getPageTitle(getPage("https://fr.wikipedia.org" + str(listLiens[choixSelectedIndex].url))))
             currentUrl = history[-1]
             paginationLimite = 20
             paginationstart = 1
@@ -158,33 +166,62 @@ tour = 1
 fin = False
 paginationLimite = 20
 paginationstart = 1
-urlRandom = 'https://fr.wikipedia.org/wiki/Sp%C3%A9cial:Page_au_hasard'
-firstPageUrl = findPageURLSearch(urlRandom)
-toGoUrl = findPageURLSearch(urlRandom)
 listLiens = []
 history = []
 historyToDisplay = []
+urlRandom = 'https://fr.wikipedia.org/wiki/Sp%C3%A9cial:Page_au_hasard'
+if len(sys.argv) == 1:
+    firstPageUrl = findPageURLSearch(urlRandom)
+    toGoUrl = findPageURLSearch(urlRandom)
+    pageBase = getPage(firstPageUrl)
+    pageArrivée = getPage(toGoUrl)
+    history.append(firstPageUrl)
+elif len(sys.argv) == 3:
+    paramUrl = sys.argv[2]
+    arrayOfParam = paramUrl.split("#")
+    firstPageUrl = findPageURLSearch("https://fr.wikipedia.org/wiki/" + formatageUrl(arrayOfParam[0]))
+    toGoUrl = findPageURLSearch("https://fr.wikipedia.org/wiki/" + formatageUrl(arrayOfParam[1]))
+    pageBase = getPage(firstPageUrl)
+    pageArrivée = getPage(toGoUrl)
+    history.append(firstPageUrl)
 
-pageBase = getPage(firstPageUrl)
-pageArrivée = getPage(toGoUrl)
+if len(sys.argv) == 1 or len(sys.argv) == 3 and sys.argv[1] == "-s":
+    while not fin == True:
+        os.system('cls||clear')
+        jeuTour(tour, toGoUrl)
+        listLiens.clear()
+        tour += 1
 
-history.append(firstPageUrl)
-
-while not fin == True:
     os.system('cls||clear')
-    jeuTour(tour, toGoUrl)
-    listLiens.clear()
-    tour += 1
-
-os.system('cls||clear')
-print("🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊")
-print("🎊 Vous avez gagné !!!!!!!! En " + str(tour - 1) + " tours 🎊")
-print("🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊")
-print("Voici les pages que vous avez visité :")
-print("Page de départ : " + getPageTitle(getPage(history[0])))
-for idx, val in enumerate(historyToDisplay):
-    if idx + 1 == len(historyToDisplay):
-        print("Page d'arrivée : " + historyToDisplay[-1])
-    else:
-        print("Page n°" + str(idx + 1) + "         " + str(val))
-print("🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊")
+    print("🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊")
+    print("🎊 Vous avez gagné !!!!!!!! En " + str(tour - 1) + " tours 🎊")
+    print("🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊")
+    print("Voici les pages que vous avez visité :")
+    print("Page de départ : " + getPageTitle(getPage(history[0])))
+    for idx, val in enumerate(historyToDisplay):
+        if idx + 1 == len(historyToDisplay):
+            print("Page d'arrivée : " + historyToDisplay[-1])
+        else:
+            print("Page n°" + str(idx + 1) + "         " + str(val))
+    print("🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊")
+elif len(sys.argv) == 2 and sys.argv[1] == "-n":
+    os.system('cls||clear')
+    print("✅  ✅  ✅ Génération réussi ✅  ✅  ✅  ")
+    print("lancer python3 realGame.py -s '" + seedUrl(urlRandom) + "#" + seedUrl(urlRandom) + "'")
+else:
+    os.system('cls||clear')
+    print("❌️ ERROR️ ❌️")
+    print("🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
+    print("Pour lancer le jeu 3 options s'offre à vous :️")
+    print("🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
+    print("1) lancer le jeu avec des url au hasard avec la commande :️")
+    print("python3 realGame.py")
+    print("🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
+    print("2) Generer une graine avec la commande :️")
+    print("python3 realGame.py -n")
+    print("🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
+    print("3) Lance une partie avec une graine avec la commande :️")
+    print("python3 realGame.py -s premiereURL#deuxiemeURL")
+    print("Exemple : ")
+    print("python3 realGame.py -s Andasta_benoiti#Henri_Durville")
+    print("🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
