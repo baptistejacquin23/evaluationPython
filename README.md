@@ -23,11 +23,11 @@ Pour lancer le jeu 3 options s'offre à vous :️
 
 3) Lance une partie avec une "graine" avec la commande :
 ️
-   python3 realGame.py -s 'premiereURL#deuxiemeURL'
+   python3 realGame.py -s "premiereURL#deuxiemeURL"
 
 Exemple : 
 
-python3 realGame.py -s 'Andasta_benoiti#Henri_Durville'
+python3 realGame.py -s "Andasta_benoiti#Henri_Durville"
 
-Vous pouvez également copier coller la "graine quand elle est générée
+Vous pouvez également copier coller la "graine" quand elle est générée
 ````
