@@ -18,7 +18,6 @@ class Lien():
 
 
 def getPageTitle(page):
-    # Get title
     for title in page.find_all('h1', class_="firstHeading"):
         return title.getText()
 
@@ -89,7 +88,7 @@ def extractWebpage(soup, start, end, historique):
     i = 1
     if tour > 1 and len(historique) > 1:
         questions[0].get("choices").append("0 => Retour à la page précédante")
-        questions[0].get("choices").append(Separator(),)
+        questions[0].get("choices").append(Separator(), )
     for anchor in soup.find('div', class_="mw-parser-output").find_all('a', href=True):
         if anchor.getText().strip() != '':
             if start <= i <= end:
@@ -99,7 +98,7 @@ def extractWebpage(soup, start, end, historique):
                 i += 1
             listLiens.append(Lien(i, anchor.getText(), anchor['href']))
 
-    questions[0].get("choices").append(Separator(),)
+    questions[0].get("choices").append(Separator(), )
     if start >= 20:
         questions[0].get("choices").append("98 => Page précédante")
     if end <= len(listLiens):
@@ -116,17 +115,17 @@ def jeuTour(nb, finalUrl):
     global paginationLimite
     global paginationstart
     global tour
-    # if while fin == False:
-    print("********** Wikigame **********", "-", "Tour :", nb)
-    print("Départ :", getPageTitle(pageBase))
-    print("Cible :", getPageTitle(pageArrivée))
-    print("Actuel :", getPageTitle(currentPage))
+    print("🌊🌊🌊🌊🌊 Wikigame 🌊🌊🌊🌊🌊", "Tour :", nb)
+    print("🏁 Départ :", getPageTitle(pageBase) + " 🏁")
+    print("🎯 Cible :", getPageTitle(pageArrivée)+ " 🎯")
+    print("🚩 Actuel :", getPageTitle(currentPage)+ " 🚩")
     result = extractWebpage(currentPage, paginationstart, paginationLimite, history)
     choix = result["theme"].split(' ', 1)[0]
     choixFullString = result["theme"]
     try:
         if choix == "0" and nb > 0:
             history.pop()
+            historyToDisplay.append(getPageTitle(getPage(history[-1])))
             paginationLimite = 20
             paginationstart = 1
         if "99 => Page Suivant" in choixFullString:
@@ -141,6 +140,7 @@ def jeuTour(nb, finalUrl):
                 choix) <= paginationLimite and "99 => Page Suivant" not in choixFullString and "98 => Page précédante" not in choixFullString:
             choixSelectedIndex = int(choix) - 1
             history.append("https://fr.wikipedia.org" + str(listLiens[choixSelectedIndex].url))
+            historyToDisplay.append(getPageTitle(getPage("https://fr.wikipedia.org" + str(listLiens[choixSelectedIndex].url))))
             currentUrl = history[-1]
             paginationLimite = 20
             paginationstart = 1
@@ -163,6 +163,7 @@ firstPageUrl = findPageURLSearch(urlRandom)
 toGoUrl = findPageURLSearch(urlRandom)
 listLiens = []
 history = []
+historyToDisplay = []
 
 pageBase = getPage(firstPageUrl)
 pageArrivée = getPage(toGoUrl)
@@ -175,4 +176,15 @@ while not fin == True:
     listLiens.clear()
     tour += 1
 
-print("Vous avez gagné !!!!!!!! En " + str(tour - 1) + " tours")
+os.system('cls||clear')
+print("🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊")
+print("🎊 Vous avez gagné !!!!!!!! En " + str(tour - 1) + " tours 🎊")
+print("🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊")
+print("Voici les pages que vous avez visité :")
+print("Page de départ : " + getPageTitle(getPage(history[0])))
+for idx, val in enumerate(historyToDisplay):
+    if idx + 1 == len(historyToDisplay):
+        print("Page d'arrivée : " + historyToDisplay[-1])
+    else:
+        print("Page n°" + str(idx + 1) + "         " + str(val))
+print("🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊")
