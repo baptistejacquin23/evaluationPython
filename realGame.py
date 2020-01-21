@@ -61,6 +61,12 @@ def extractWebpage(soup, start, end, historique):
         cadre.extract()
     for cadre in soup.find_all('div', class_="infobox_v3"):
         cadre.extract()
+    for cadre in soup.find_all('table', class_="infobox"):
+        cadre.extract()
+    for cadre in soup.find_all('table', class_="infobox_v2"):
+        cadre.extract()
+    for cadre in soup.find_all('table', class_="infobox_v3"):
+        cadre.extract()
     for portail in soup.find_all('ul', class_="bandeau-portail"):
         portail.extract()
     for navbox in soup.find_all('div', class_="navbox-container"):
