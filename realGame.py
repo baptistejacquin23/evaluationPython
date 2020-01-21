@@ -214,7 +214,7 @@ elif len(sys.argv) == 2 and sys.argv[1] == "-n":
     os.system('cls||clear')
     print("✅  ✅  ✅ Génération réussi ✅  ✅  ✅  ")
     print("lancer la commande ci-dessous : ")
-    print("python3 realGame.py -s '" + seedUrl(urlRandom) + "#" + seedUrl(urlRandom) + "'")
+    print('python3 realGame.py -s "' + seedUrl(urlRandom) + '#' + seedUrl(urlRandom) + '"')
 else:
     os.system('cls||clear')
     print("❌️ ERROR️ ❌️")
